@@ -1,4 +1,5 @@
-﻿using Discord.Commands;
+﻿using Discord;
+using Discord.Commands;
 using Discord.WebSocket;
 using System;
 using System.Collections.Generic;
@@ -9,13 +10,13 @@ using System.Threading.Tasks;
 
 namespace Arielle
 {
-    public class CommandHandler
+    public class CommandHandlingService
     {
         private DiscordSocketClient _client;
         private CommandService _service;
         private char charPrefix = '.';
 
-        public CommandHandler(DiscordSocketClient client)
+        public CommandHandlingService(DiscordSocketClient client)
         {
             _client = client;
             _service = new CommandService();
@@ -23,15 +24,16 @@ namespace Arielle
             _client.MessageReceived += HandleCommandAsync;
         }
 
-        private async Task HandleCommandAsync(SocketMessage s)
+        private async Task HandleCommandAsync(SocketMessage rawMessage)
         {
-            var msg = s as SocketUserMessage;
-            if (msg == null) return;
+            // Ignore system messages and messages from bots
+            if (!(rawMessage is SocketUserMessage message)) return;
+            if (message.Source != MessageSource.User) return;
 
-            var context = new SocketCommandContext(_client, msg);
+            var context = new SocketCommandContext(_client, message);
 
             int argPos = 0;
-            if (msg.HasCharPrefix(charPrefix, ref argPos))
+            if (message.HasCharPrefix(charPrefix, ref argPos) || message.HasMentionPrefix(_client.CurrentUser, ref argPos))
             {
                 var result = await _service.ExecuteAsync(context, argPos);
                 if (!result.IsSuccess && result.Error != CommandError.UnknownCommand)

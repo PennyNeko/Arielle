@@ -7,6 +7,8 @@ using Arielle.SaveLoad;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using System.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Discord.Commands;
 
 namespace Arielle
 {
@@ -15,13 +17,13 @@ namespace Arielle
         List<User> users = new List<User>();
         List<Question> questions = new List<Question>();
         static void Main(string[] args)
-        => new Program().StartAsync().GetAwaiter().GetResult();
+        => new Program().MainAsync().GetAwaiter().GetResult();
 
         private DiscordSocketClient _client;
 
-        private CommandHandler _handler;
+        private CommandHandlingService _handler;
 
-        public async Task StartAsync()
+        public async Task MainAsync()
         {
             //convert Enums to Strings (instead of Integer) globally
             JsonConvert.DefaultSettings = (() =>
@@ -32,15 +34,18 @@ namespace Arielle
             });
             
             _client = new DiscordSocketClient();
-            _handler = new CommandHandler(_client);
-            
+            _handler = new CommandHandlingService(_client);
+
+            //var services = ConfigureServices();
+            //services.GetRequiredService<LogService>();
+
             await _client.LoginAsync(TokenType.Bot, ConfigurationManager.AppSettings["token"]);
             await _client.StartAsync();
 
             //Load the game users and place in list "users"
             LoadUsers loadedUsers = new LoadUsers();
             users = loadedUsers.GetUsers();
-
+            
             //Load game questions
             LoadQuestions loadedQuestions = new LoadQuestions();
             questions = loadedQuestions.GetQuestions();
@@ -53,6 +58,20 @@ namespace Arielle
 
             
             await Task.Delay(-1);
+        }
+
+        private IServiceProvider ConfigureServices()
+        {
+            return new ServiceCollection()
+                // Base
+                .AddSingleton(_client)
+                .AddSingleton<CommandService>()
+                .AddSingleton<CommandHandlingService>()
+                // Logging
+                //.AddLogging()
+                //.AddSingleton<LogService>()
+                // Add additional services here...
+                .BuildServiceProvider();
         }
         static void CurrentDomain_ProcessExit(object sender, EventArgs e)
         {
