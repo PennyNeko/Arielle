@@ -14,14 +14,19 @@ namespace Arielle
 {
     public class Program
     {
-        List<User> users = new List<User>();
-        List<Question> questions = new List<Question>();
+        static List<User> users = new List<User>();
+        static List<Question> questions = new List<Question>();
+
+        public static ulong OwnerID;
+
+        private DiscordSocketClient _client;
+        private CommandHandlingService _handler;
         static void Main(string[] args)
         => new Program().MainAsync().GetAwaiter().GetResult();
 
-        private DiscordSocketClient _client;
 
-        private CommandHandlingService _handler;
+        internal static List<User> Users { get => users; set => users = value; }
+        internal static List<Question> Questions { get => questions; set => questions = value; }
 
         public async Task MainAsync()
         {
@@ -33,6 +38,7 @@ namespace Arielle
                 return settings;
             });
             
+            OwnerID = ulong.Parse(ConfigurationManager.AppSettings["ownerID"]);
             _client = new DiscordSocketClient();
             _handler = new CommandHandlingService(_client);
 
@@ -44,17 +50,17 @@ namespace Arielle
 
             //Load the game users and place in list "users"
             LoadUsers loadedUsers = new LoadUsers();
-            users = loadedUsers.GetUsers();
+            Users = loadedUsers.GetUsers();
             
             //Load game questions
             LoadQuestions loadedQuestions = new LoadQuestions();
-            questions = loadedQuestions.GetQuestions();
+            Questions = loadedQuestions.GetQuestions();
 
             //Save the game users from list "users" to JSON file Users.json
-            SaveUsers savedUsers = new SaveUsers(users);
+            SaveUsers savedUsers = new SaveUsers(Users);
 
             //Save game questions to JSON file
-            SaveQuestions savedQuestions = new SaveQuestions(questions);
+            SaveQuestions savedQuestions = new SaveQuestions(Questions);
 
             
             await Task.Delay(-1);

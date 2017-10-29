@@ -12,7 +12,7 @@ namespace Arielle
             string usersFile = File.ReadAllText(@"..\..\JSON\Users.json");
             foreach (var user in JsonConvert.DeserializeObject<dynamic>(usersFile))
             {
-                User newuser = new User((long)user.ID, (int)user.Points);
+                User newuser = new User((ulong)user.ID, (int)user.Points);
                 users.Add(newuser);
             }
         }

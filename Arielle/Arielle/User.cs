@@ -8,13 +8,13 @@ namespace Arielle
 {
     class User
     {
-        public User(long id, int points)
+        public User(ulong id, int points)
         {
             ID = id;
             Points = points;
         }
 
-        public long ID { get; set; }
+        public ulong ID { get; set; }
         public int Points { get; set; }
     }
 }

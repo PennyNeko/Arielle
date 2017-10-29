@@ -11,7 +11,7 @@ namespace Arielle
         public enum Category { Classes, Bosses, Outfits }
         public enum SubCategory { Vella, Arisha, Season3 }
         public enum Difficulty { Easy, Medium, Hard }
-        public Question(long id, string text, string answer, Category cat, SubCategory subCat, Difficulty diff)
+        public Question(ulong id, string text, string answer, Category cat, SubCategory subCat, Difficulty diff)
         {
             ID = id;
             Text = text;
@@ -21,7 +21,7 @@ namespace Arielle
             Diff = diff;
         }
 
-        public long ID
+        public ulong ID
         {
             set;
             get;
