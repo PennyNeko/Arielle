@@ -1,4 +1,5 @@
-﻿using Discord.Commands;
+﻿using Arielle.SaveLoad;
+using Discord.Commands;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -24,11 +25,13 @@ namespace Arielle.Modules
                     break;
                 }
             }
-            if (userExists)
+            if (!userExists)
             {
                 Program.Users.Add(new User(userID, 0));
                 await Context.Channel.SendMessageAsync($"User {Context.User.Username} successfully added!");
             }
+            //Save the game users from list "users" to JSON file Users.json
+            SaveUsers savedUsers = new SaveUsers(Program.Users);
         }
     }
 }
