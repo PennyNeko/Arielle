@@ -29,9 +29,10 @@ namespace Arielle.Modules
             {
                 Program.Users.Add(new User(userID, 0));
                 await Context.Channel.SendMessageAsync($"User {Context.User.Username} successfully added!");
+
+                //Save the game users from list "users" to JSON file Users.json
+                SaveUsers savedUsers = new SaveUsers(Program.Users);
             }
-            //Save the game users from list "users" to JSON file Users.json
-            SaveUsers savedUsers = new SaveUsers(Program.Users);
         }
     }
 }

@@ -55,13 +55,6 @@ namespace Arielle
             //Load game questions
             LoadQuestions loadedQuestions = new LoadQuestions();
             Questions = loadedQuestions.GetQuestions();
-
-            //Save the game users from list "users" to JSON file Users.json
-            SaveUsers savedUsers = new SaveUsers(Users);
-
-            //Save game questions to JSON file
-            SaveQuestions savedQuestions = new SaveQuestions(Questions);
-
             
             await Task.Delay(-1);
         }

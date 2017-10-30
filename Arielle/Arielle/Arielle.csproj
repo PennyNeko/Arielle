@@ -143,6 +143,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Modules\AddQuestion.cs" />
     <Compile Include="Modules\AddUser.cs" />
     <Compile Include="Modules\CheckPoints.cs" />
     <Compile Include="Services\CommandHandlingService.cs" />
