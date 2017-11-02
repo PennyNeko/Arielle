@@ -11,22 +11,14 @@ namespace Arielle
         public enum Category { Classes, Bosses, Outfits }
         public enum SubCategory { Vella, Arisha, Season3 }
         public enum Difficulty { Easy, Medium, Hard }
-        public Question(ulong id, string text, string answer, Category cat, SubCategory subCat, Difficulty diff)
+        public Question(string text, string answer, Category cat, SubCategory subCat, Difficulty diff)
         {
-            ID = id;
             Text = text;
             Answer = answer;
             Cat = cat;
             SubCat = subCat;
             Diff = diff;
         }
-
-        public ulong ID
-        {
-            set;
-            get;
-        }
-
         public string Text
         {
             set;

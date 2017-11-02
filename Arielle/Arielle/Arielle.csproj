@@ -99,11 +99,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Modules\AddQuestion.cs" />
     <Compile Include="Modules\AddUser.cs" />
-    <Compile Include="Modules\AskQuestion.cs" />
     <Compile Include="Modules\CheckPoints.cs" />
-    <Compile Include="Modules\ListQuestions.cs" />
+    <Compile Include="Modules\QuestionCommands.cs" />
     <Compile Include="Services\CommandHandlingService.cs" />
     <Compile Include="Modules\RandomNumberGenerator.cs" />
     <Compile Include="SaveLoad\LoadQuestions.cs" />

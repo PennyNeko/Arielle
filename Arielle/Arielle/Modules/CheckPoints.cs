@@ -22,6 +22,7 @@ namespace Arielle.Modules
                 }
             }
         }
+
         [Command("CheckPoints")]
         public async Task CheckUserPoints(string userID)
         {
@@ -40,7 +41,7 @@ namespace Arielle.Modules
             }
             if (!wasFound)
             {
-                await Context.Channel.SendMessageAsync($"User {userID} was not found");
+                await Context.Channel.SendMessageAsync($"User \"{userID}\" was not found");
             }
         }
     }

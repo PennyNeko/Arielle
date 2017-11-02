@@ -9,6 +9,7 @@ using Newtonsoft.Json.Converters;
 using System.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Discord.Commands;
+using System.Threading;
 
 namespace Arielle
 {
@@ -56,7 +57,7 @@ namespace Arielle
             LoadQuestions loadedQuestions = new LoadQuestions();
             Questions = loadedQuestions.GetQuestions();
             
-            await Task.Delay(-1);
+            await Task.Delay(Timeout.Infinite);
         }
 
         private IServiceProvider ConfigureServices()
