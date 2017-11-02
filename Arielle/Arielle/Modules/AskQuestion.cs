@@ -46,13 +46,26 @@ namespace Arielle.Modules
                     if (msg.Content != randomQuestion.Answer)
                         return;
                     await Context.Channel.SendMessageAsync($"Correct answer \"{randomQuestion.Answer}\" by \"{msg.Author.Username}\"");
+                    bool userFound = false;
                     for (int i=0; i<Program.Users.Count; i++)
                     {
                         if (Program.Users[i].ID == msg.Author.Id)
                         {
                             await Context.Channel.SendMessageAsync($"Current points: {Program.Users[i].Points}+1");
                             Program.Users[i].Points++;
+                            userFound = true;
                         }
+                    }
+                    /*if (!userFound)
+                    {
+                        AddUser adduser = new AddUser();
+                        Task add = Task.Run(() => adduser.AddNewUser());
+                        await Context.Channel.SendMessageAsync($"Current points: {Program.Users.Last().Points}+1");
+                        Program.Users.Last().Points++;
+                    }*/
+                    if (!userFound)
+                    {
+                        await Context.Channel.SendMessageAsync($"User \"{msg.Author.Username}\" not in the list of Players. Try adding yourself with \".AddUser\" first");
                     }
                 }
                 catch
