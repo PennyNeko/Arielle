@@ -1,4 +1,5 @@
 ﻿using Discord.Commands;
+using Discord;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,9 +11,14 @@ namespace Arielle.Modules
     public class Test : ModuleBase<SocketCommandContext>
     {
         [Command("Test")]
-        public async Task Testing(string repeat)
+        public async Task Testing()
         {
-            await Context.Channel.SendMessageAsync("success" + repeat);
+            Embed embed = new EmbedBuilder()
+                .WithColor(new Color(40, 40, 120))
+                .WithAuthor(a => a.Name = "Arielle")
+                .WithTitle("Embed!")
+                .WithDescription("This is an embed.");
+            
         }
     }
 }

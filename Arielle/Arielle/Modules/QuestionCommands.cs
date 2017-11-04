@@ -47,13 +47,30 @@ namespace Arielle.Modules
 
         }
 
-        
+
         [Command("AskQuestion")]
         public async Task AskQuestion()
         {
+            int i = 20;
+
             randomQuestion = GetRandomQuestion();
             await Context.Channel.SendMessageAsync($"Question: {randomQuestion.Text}");
             HandleQuizAnswers();
+
+            
+            /*while (i > 0)
+            {
+                await Task.Delay(1000);
+                i--;
+            }*/
+
+            //await Stop();
+        }
+
+        private async Task Stop()
+        {
+            Context.Client.MessageReceived -= QuizAnswersRecieved;
+            await Context.Channel.SendMessageAsync("Quiz ended.");
         }
 
         private Question GetRandomQuestion()
@@ -91,6 +108,7 @@ namespace Arielle.Modules
                             Program.Users[i].Points++;
                             userFound = true;
                             SaveUsers savedUsers = new SaveUsers(Program.Users);
+                            await Stop();
                         }
                     }
 
@@ -127,45 +145,17 @@ namespace Arielle.Modules
         {
             int qId = int.Parse(questionId);
             Question questionToDelete = Program.Questions[qId];
-            await Context.Channel.SendMessageAsync($"Are you sure you wish to delete the question \"{questionToDelete.Text}\"?(Yes/No)");
-            var replies = Context.Channel.GetMessagesAsync();
-            HandleConfirmationAnswers();
-            await Context.Channel.SendMessageAsync($"Question No.{qId} successfully deleted!");
-            Program.Questions.RemoveAt(qId);
-        }
-
-        private void HandleConfirmationAnswers()
-        {
-            Context.Client.MessageReceived += ConfirmationAnswersRecieved;
-            
-        }
-
-        private Task ConfirmationAnswersRecieved(SocketMessage imsg)
-        {
-            var _ = Task.Run(async () =>
+            if (Context.User.Id == Program.OwnerID)
             {
-                try
-                {
-                    var msg = imsg as SocketUserMessage;
-                    if  (msg.Author.Id == ulong.Parse(ConfigurationManager.AppSettings["ownerID"]))
-                    {
-                        await Context.Channel.SendMessageAsync("Only the owner can delete questions!");
-                        return;
-                    }
+                await Context.Channel.SendMessageAsync($"Question No.{qId} successfully deleted!");
+                Program.Questions.RemoveAt(qId);
 
-                    if (msg.Content.ToLower() == "n" || msg.Content.ToLower() == "no")
-                    {
-                        await Context.Channel.SendMessageAsync("Deletion of question cancelled!");
-                        return;
-                    }
-                    else if (!(msg.Content.ToLower() == "y" || msg.Content.ToLower() == "yes"))
-                        return;
-                }
-                catch
-                {
-                }
-            });
-            return Task.CompletedTask;
+                //Save game questions to JSON file
+                SaveQuestions savedQuestions = new SaveQuestions(Program.Questions);
+            } else
+                await Context.Channel.SendMessageAsync("Only the owner can delete questions!");
+            //To-Do: Have confirmation dialogue
         }
     }
+        
 }
