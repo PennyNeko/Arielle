@@ -101,6 +101,7 @@
   <ItemGroup>
     <Compile Include="Modules\AddUser.cs" />
     <Compile Include="Modules\CheckPoints.cs" />
+    <Compile Include="Modules\ModuleIdeas.cs" />
     <Compile Include="Modules\QuestionCommands.cs" />
     <Compile Include="Services\CommandHandlingService.cs" />
     <Compile Include="Modules\RandomNumberGenerator.cs" />
