@@ -43,8 +43,8 @@ namespace Arielle
             _client = new DiscordSocketClient();
             _handler = new CommandHandlingService(_client);
 
-            //var services = ConfigureServices();
-            //services.GetRequiredService<LogService>();
+            var services = ConfigureServices();
+            services.GetRequiredService<LogService>();
 
             await _client.LoginAsync(TokenType.Bot, ConfigurationManager.AppSettings["token"]);
             await _client.StartAsync();
@@ -68,14 +68,10 @@ namespace Arielle
                 .AddSingleton<CommandService>()
                 .AddSingleton<CommandHandlingService>()
                 // Logging
-                //.AddLogging()
-                //.AddSingleton<LogService>()
+                .AddLogging()
+                .AddSingleton<LogService>()
                 // Add additional services here...
                 .BuildServiceProvider();
-        }
-        static void CurrentDomain_ProcessExit(object sender, EventArgs e)
-        {
-            Console.WriteLine("exit");
         }
     }
 }

@@ -114,8 +114,6 @@
     <Compile Include="Question.cs" />
     <Compile Include="SaveLoad\SaveQuestions.cs" />
     <Compile Include="SaveLoad\SaveUsers.cs" />
-    <Compile Include="Services\ILogger.cs" />
-    <Compile Include="Services\ILoggerFactory.cs" />
     <Compile Include="Services\LogService.cs" />
     <Compile Include="User.cs" />
   </ItemGroup>

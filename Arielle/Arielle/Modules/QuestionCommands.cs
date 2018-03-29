@@ -3,18 +3,16 @@ using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
 using System;
-using System.Collections.Generic;
-using System.Configuration;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using static Arielle.Question;
+using System.Timers;
 
 namespace Arielle.Modules
 {
     public class QuestionCommands : ModuleBase<SocketCommandContext>
     {
-        static Random random = new Random();
+        private static Timer askedQuestionTimer;
+        private static Random random = new Random();
         Question randomQuestion;
 
         [Command("AddQuestion")]
@@ -51,28 +49,30 @@ namespace Arielle.Modules
         [Command("AskQuestion")]
         public async Task AskQuestion()
         {
-            int i = 20;
+            askedQuestionTimer = new Timer(10 * 1000);
+            askedQuestionTimer.Elapsed += async (source, e) => await Stop();
 
+            askedQuestionTimer.AutoReset = true;
+            askedQuestionTimer.Enabled = true;
             randomQuestion = GetRandomQuestion();
             await Context.Channel.SendMessageAsync($"Question: {randomQuestion.Text}");
             HandleQuizAnswers();
-
-            
-            /*while (i > 0)
-            {
-                await Task.Delay(1000);
-                i--;
-            }*/
-
-            //await Stop();
         }
-
         private async Task Stop()
         {
             Context.Client.MessageReceived -= QuizAnswersRecieved;
-            await Context.Channel.SendMessageAsync("Quiz ended.");
+            await Context.Channel.SendMessageAsync("Quiz stopped.");
+            askedQuestionTimer.Stop();
+            askedQuestionTimer.Dispose();
         }
 
+        /*[Command("StartQuiz")]
+        public async Task StartQuiz()
+        {
+
+        }*/
+
+        
         private Question GetRandomQuestion()
         {
             int randomPosition = random.Next(0, Program.Questions.Count);
@@ -98,7 +98,7 @@ namespace Arielle.Modules
 
                     if (msg.Content.ToLower() != randomQuestion.Answer.ToLower())
                         return;
-                    await Context.Channel.SendMessageAsync($"Correct answer \"{randomQuestion.Answer}\" by @{msg.Author.Username}");
+                    await Context.Channel.SendMessageAsync($"Correct answer \"{randomQuestion.Answer}\" by {msg.Author.Mention}");
                     bool userFound = false;
                     for (int i = 0; i < Program.Users.Count; i++)
                     {
@@ -108,7 +108,7 @@ namespace Arielle.Modules
                             Program.Users[i].Points++;
                             userFound = true;
                             SaveUsers savedUsers = new SaveUsers(Program.Users);
-                            await Stop();
+                            Stop();
                         }
                     }
 
@@ -116,7 +116,7 @@ namespace Arielle.Modules
 
                     if (!userFound)
                     {
-                        await Context.Channel.SendMessageAsync($"User @{msg.Author.Username} not in the list of Players. Try adding yourself with \".AddUser\" first");
+                        await Context.Channel.SendMessageAsync($"User @{msg.Author.Mention} not in the list of Players. Try adding yourself with \".AddUser\" first");
                     }
                 }
                 catch

@@ -16,7 +16,7 @@ namespace Arielle.Modules
         [Command("Rng")]
         public async Task RandomGeneration(int end)
         {
-            int start = 0;
+            int start = 1;
             Random random = new Random();
             int randomNumber = random.Next(start, end + 1);
             await Context.Channel.SendMessageAsync(randomNumber.ToString());

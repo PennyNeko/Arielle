@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
+using System.IO;
 
 namespace Arielle
 {
@@ -11,60 +12,33 @@ namespace Arielle
     {
         private readonly DiscordSocketClient _discord;
         private readonly CommandService _commands;
-        private readonly ILoggerFactory _loggerFactory;
-        private readonly ILogger _discordLogger;
-        private readonly ILogger _commandsLogger;
 
-        public LogService(DiscordSocketClient discord, CommandService commands, ILoggerFactory loggerFactory)
+        private string _logDirectory { get; }
+        private string _logFile => Path.Combine(_logDirectory, $"{DateTime.UtcNow.ToString("yyyy-MM-dd")}.txt");
+
+        // DiscordSocketClient and CommandService are injected automatically from the IServiceProvider
+        public LogService(DiscordSocketClient discord, CommandService commands)
         {
+            _logDirectory = Path.Combine(AppContext.BaseDirectory, "logs");
+
             _discord = discord;
             _commands = commands;
 
-            _loggerFactory = ConfigureLogging(loggerFactory);
-            _discordLogger = _loggerFactory.CreateLogger("discord");
-            _commandsLogger = _loggerFactory.CreateLogger("commands");
-
-            _discord.Log += LogDiscord;
-            _commands.Log += LogCommand;
+            _discord.Log += OnLogAsync;
+            _commands.Log += OnLogAsync;
         }
 
-        private ILoggerFactory ConfigureLogging(ILoggerFactory factory)
+        private Task OnLogAsync(LogMessage msg)
         {
-            factory.AddConsole();
-            return factory;
+            if (!Directory.Exists(_logDirectory))     // Create the log directory if it doesn't exist
+                Directory.CreateDirectory(_logDirectory);
+            if (!File.Exists(_logFile))               // Create today's log file if it doesn't exist
+                File.Create(_logFile).Dispose();
+
+            string logText = $"{DateTime.UtcNow.ToString("hh:mm:ss")} [{msg.Severity}] {msg.Source}: {msg.Exception?.ToString() ?? msg.Message}";
+            File.AppendAllText(_logFile, logText + "\n");     // Write the log text to a file
+
+            return Console.Out.WriteLineAsync(logText);       // Write the log text to the console
         }
-
-        private Task LogDiscord(LogMessage message)
-        {
-            _discordLogger.Log(
-                LogLevelFromSeverity(message.Severity),
-                0,
-                message,
-                message.Exception,
-                (_1, _2) => message.ToString(prependTimestamp: false));
-            return Task.CompletedTask;
-        }
-
-        private Task LogCommand(LogMessage message)
-        {
-            // Return an error message for async commands
-            if (message.Exception is CommandException command)
-            {
-                // Don't risk blocking the logging task by awaiting a message send; ratelimits!?
-                var _ = command.Context.Channel.SendMessageAsync($"Error: {command.Message}");
-            }
-
-            _commandsLogger.Log(
-                LogLevelFromSeverity(message.Severity),
-                0,
-                message,
-                message.Exception,
-                (_1, _2) => message.ToString(prependTimestamp: false));
-            return Task.CompletedTask;
-        }
-
-        private static LogLevel LogLevelFromSeverity(LogSeverity severity)
-            => (LogLevel)(Math.Abs((int)severity - 5));
-
     }
 }
