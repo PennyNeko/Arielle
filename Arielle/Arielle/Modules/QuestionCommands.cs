@@ -6,14 +6,18 @@ using System;
 using System.Threading.Tasks;
 using static Arielle.Question;
 using System.Timers;
+using System.Linq;
 
 namespace Arielle.Modules
 {
     public class QuestionCommands : ModuleBase<SocketCommandContext>
     {
-        private static Timer askedQuestionTimer;
+        private static Timer askedQuestionTimer = new Timer(30 * 1000);
+        private static Timer quizTimer = new Timer(60 * 1000);
         private static Random random = new Random();
         Question randomQuestion;
+        private static bool isQuestionRunning = false;
+        private static bool isQuizRunning = false;
 
         [Command("AddQuestion")]
         public async Task AddNewQuestion(string text, string answer, string cat, string subCat, string diff)
@@ -47,31 +51,81 @@ namespace Arielle.Modules
 
 
         [Command("AskQuestion")]
-        public async Task AskQuestion()
+        public async Task AskQuestionCommand()
         {
-            askedQuestionTimer = new Timer(10 * 1000);
-            askedQuestionTimer.Elapsed += async (source, e) => await Stop();
+            if (!isQuestionRunning && !isQuizRunning)
+            {
+                await AskRandomQuestion();
+                StartQuestionTimer();
+            }
+            else
+            {
+                await Context.Channel.SendMessageAsync("A question or quiz is already running.");
+            }
 
-            askedQuestionTimer.AutoReset = true;
-            askedQuestionTimer.Enabled = true;
+        }
+
+        private async Task AskRandomQuestion()
+        {
+            isQuestionRunning = true;
             randomQuestion = GetRandomQuestion();
             await Context.Channel.SendMessageAsync($"Question: {randomQuestion.Text}");
             HandleQuizAnswers();
         }
-        private async Task Stop()
+
+        private void StartQuestionTimer()
         {
-            Context.Client.MessageReceived -= QuizAnswersRecieved;
-            await Context.Channel.SendMessageAsync("Quiz stopped.");
-            askedQuestionTimer.Stop();
-            askedQuestionTimer.Dispose();
+            askedQuestionTimer.AutoReset = false;
+            askedQuestionTimer.Elapsed += async (source, e) => await StopCurrentQuestion();
+            askedQuestionTimer.Start();
         }
 
-        /*[Command("StartQuiz")]
-        public async Task StartQuiz()
+        private async Task StopCurrentQuestion()
         {
+            Context.Client.MessageReceived -= QuizAnswersRecieved;
+            await Context.Channel.SendMessageAsync("Stopped receiving replies.");
+            askedQuestionTimer.Stop();
+            isQuestionRunning = false;
+        }
 
-        }*/
+        [Command("StartQuiz")]
+        public async Task StartRunningQuizCommand()
+        {
+            if (!isQuizRunning && !isQuestionRunning)
+            {
+                isQuizRunning = true;
+                await AskRandomQuestion();
+                StartQuestionTimer();
+                quizTimer.Start();
+                quizTimer.Elapsed += async (source, e) => { await AskRandomQuestion(); StartQuestionTimer(); };
+            }
+            else
+            {
+                await Context.Channel.SendMessageAsync("A quiz or question is already running.");
+            }
+        }
 
+        [Command("StopQuiz")]
+        public async Task StopRunningQuiz()
+        {
+            if (isQuizRunning)
+            {
+                quizTimer.Stop();
+                await Context.Channel.SendMessageAsync("Quiz ended.");
+                if (isQuestionRunning)
+                {
+
+                    askedQuestionTimer.Stop();
+                    await StopCurrentQuestion();
+
+                }
+                isQuizRunning = false;
+            }
+            else
+            {
+                await Context.Channel.SendMessageAsync("No quiz running.");
+            }
+        }
         
         private Question GetRandomQuestion()
         {
@@ -98,32 +152,39 @@ namespace Arielle.Modules
 
                     if (msg.Content.ToLower() != randomQuestion.Answer.ToLower())
                         return;
+
                     await Context.Channel.SendMessageAsync($"Correct answer \"{randomQuestion.Answer}\" by {msg.Author.Mention}");
-                    bool userFound = false;
-                    for (int i = 0; i < Program.Users.Count; i++)
+
+                    foreach (User user in Program.Users)
                     {
-                        if (Program.Users[i].ID == msg.Author.Id)
+                        if (user.ID == msg.Author.Id)
                         {
-                            await Context.Channel.SendMessageAsync($"Current points: {Program.Users[i].Points}+1");
-                            Program.Users[i].Points++;
-                            userFound = true;
-                            SaveUsers savedUsers = new SaveUsers(Program.Users);
-                            Stop();
+                            await AddPoint(user);
+                            await StopCurrentQuestion();
+                            return;
                         }
                     }
 
-                    //To-Do: create the user if doesn't exist.
+                    //Add new user to the list of users
+                    UserCommands addUser = new UserCommands();
+                    await Context.Channel.SendMessageAsync($"User @{msg.Author.Mention} not in the list of Players.");
+                    await addUser.AddNewUser(msg.Author.Id);
+                    await AddPoint(Program.Users.Last());
 
-                    if (!userFound)
-                    {
-                        await Context.Channel.SendMessageAsync($"User @{msg.Author.Mention} not in the list of Players. Try adding yourself with \".AddUser\" first");
-                    }
+                    await StopCurrentQuestion();
                 }
                 catch
                 {
                 }
             });
             return Task.CompletedTask;
+        }
+
+        private async Task AddPoint(User user)
+        {
+            await Context.Channel.SendMessageAsync($"Current points: {user.Points}+1");
+            user.Points++;
+            SaveUsers savedUsers = new SaveUsers(Program.Users);
         }
 
         [Command("ShowQuestions")]

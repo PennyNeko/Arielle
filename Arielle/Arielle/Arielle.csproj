@@ -99,7 +99,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Modules\AddUser.cs" />
+    <Compile Include="Modules\UserCommands.cs" />
     <Compile Include="Modules\CheckPoints.cs" />
     <Compile Include="Modules\ModuleIdeas.cs" />
     <Compile Include="Modules\QuestionCommands.cs" />
