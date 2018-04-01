@@ -36,7 +36,7 @@ namespace Arielle.Modules
         }
 
         [Command("AddUser")]
-        public async Task AddNewUser(ulong userId)
+        public void AddNewUser(ulong userId)
         {
             ulong userID = userId;
             bool userExists = false;
@@ -44,7 +44,7 @@ namespace Arielle.Modules
             {
                 if (u.ID == userID)
                 {
-                    await Context.Channel.SendMessageAsync($"User with ID {userID} already exists!");
+                    //await Context.Channel.SendMessageAsync($"User with ID {userID} already exists!");
                     userExists = true;
                     return;
                 }
@@ -52,7 +52,7 @@ namespace Arielle.Modules
             if (!userExists)
             {
                 Program.Users.Add(new User(userID, 0));
-                await Context.Channel.SendMessageAsync($"User with ID {userID} successfully added!");
+                //await Context.Channel.SendMessageAsync($"User with ID {userID} successfully added!");
 
                 //Save the game users from list "users" to JSON file Users.json
                 SaveUsers savedUsers = new SaveUsers(Program.Users);

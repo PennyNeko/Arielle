@@ -12,8 +12,9 @@ namespace Arielle.Modules
 {
     public class QuestionCommands : ModuleBase<SocketCommandContext>
     {
-        private static Timer askedQuestionTimer = new Timer(30 * 1000);
-        private static Timer quizTimer = new Timer(60 * 1000);
+        private static Timer askedQuestionTimer;
+        private static Timer quizTimer;
+        private EmbedBuilder quizAnswer = new EmbedBuilder().WithAuthor(a => a.Name = "Arielle");
         private static Random random = new Random();
         Question randomQuestion;
         private static bool isQuestionRunning = false;
@@ -75,6 +76,7 @@ namespace Arielle.Modules
 
         private void StartQuestionTimer()
         {
+            askedQuestionTimer = new Timer(30 * 1000);
             askedQuestionTimer.AutoReset = false;
             askedQuestionTimer.Elapsed += async (source, e) => await StopCurrentQuestion();
             askedQuestionTimer.Start();
@@ -85,6 +87,7 @@ namespace Arielle.Modules
             Context.Client.MessageReceived -= QuizAnswersRecieved;
             await Context.Channel.SendMessageAsync("Stopped receiving replies.");
             askedQuestionTimer.Stop();
+            askedQuestionTimer.Dispose();
             isQuestionRunning = false;
         }
 
@@ -93,6 +96,7 @@ namespace Arielle.Modules
         {
             if (!isQuizRunning && !isQuestionRunning)
             {
+                quizTimer = new Timer(60 * 1000);
                 isQuizRunning = true;
                 await AskRandomQuestion();
                 StartQuestionTimer();
@@ -111,11 +115,13 @@ namespace Arielle.Modules
             if (isQuizRunning)
             {
                 quizTimer.Stop();
+                quizTimer.Dispose();
                 await Context.Channel.SendMessageAsync("Quiz ended.");
                 if (isQuestionRunning)
                 {
 
                     askedQuestionTimer.Stop();
+                    askedQuestionTimer.Dispose();
                     await StopCurrentQuestion();
 
                 }
@@ -145,7 +151,7 @@ namespace Arielle.Modules
             {
                 try
                 {
-
+                    
                     if (imsg.Author.IsBot)
                         return;
                     var msg = imsg as SocketUserMessage;
@@ -153,25 +159,30 @@ namespace Arielle.Modules
                     if (msg.Content.ToLower() != randomQuestion.Answer.ToLower())
                         return;
 
-                    await Context.Channel.SendMessageAsync($"Correct answer \"{randomQuestion.Answer}\" by {msg.Author.Mention}");
+                    User correctUser = null;
+                    quizAnswer.WithTitle($"Correct answer \"{randomQuestion.Answer}\" by {msg.Author.Username}");
+                    quizAnswer.WithColor(Color.Green);
+                    //await Context.Channel.SendMessageAsync($"Correct answer \"{randomQuestion.Answer}\" by {msg.Author.Mention}");
 
                     foreach (User user in Program.Users)
                     {
                         if (user.ID == msg.Author.Id)
                         {
-                            await AddPoint(user);
-                            await StopCurrentQuestion();
-                            return;
+                            correctUser = user;
+                            break;
                         }
                     }
 
-                    //Add new user to the list of users
-                    UserCommands addUser = new UserCommands();
-                    await Context.Channel.SendMessageAsync($"User @{msg.Author.Mention} not in the list of Players.");
-                    await addUser.AddNewUser(msg.Author.Id);
-                    await AddPoint(Program.Users.Last());
+                    if (correctUser == null)
+                    {
+                        UserCommands addUser = new UserCommands();
+                        addUser.AddNewUser(msg.Author.Id);
+                        correctUser = Program.Users.Last();
+                    }
 
+                    AddPoint(correctUser);
                     await StopCurrentQuestion();
+                    await Context.Channel.SendMessageAsync("", false, quizAnswer);
                 }
                 catch
                 {
@@ -180,9 +191,10 @@ namespace Arielle.Modules
             return Task.CompletedTask;
         }
 
-        private async Task AddPoint(User user)
+        private void AddPoint(User user)
         {
-            await Context.Channel.SendMessageAsync($"Current points: {user.Points}+1");
+            quizAnswer.WithDescription($"Current points: {user.Points}+1");
+            //await Context.Channel.SendMessageAsync($"Current points: {user.Points}+1");
             user.Points++;
             SaveUsers savedUsers = new SaveUsers(Program.Users);
         }

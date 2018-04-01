@@ -13,12 +13,7 @@ namespace Arielle.Modules
         [Command("Test")]
         public async Task Testing()
         {
-            Embed embed = new EmbedBuilder()
-                .WithColor(new Color(40, 40, 120))
-                .WithAuthor(a => a.Name = "Arielle")
-                .WithTitle("Embed!")
-                .WithDescription("This is an embed.");
-            
+            await Context.Channel.SendMessageAsync("This is a cool message <:vindiyes:374126672942989313>");
         }
-    }
+    }   
 }
