@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using static Arielle.Question;
 using System.Timers;
 using System.Linq;
+using System.Collections.Generic;
 
 namespace Arielle.Modules
 {
@@ -21,11 +22,15 @@ namespace Arielle.Modules
         private static bool isQuizRunning = false;
 
         [Command("AddQuestion")]
-        public async Task AddNewQuestion(string text, string answer, string cat, string subCat, string diff)
+        public async Task AddNewQuestion(string text, string answer, string cat,  string diff)
         {
             bool questionExists = false;
-            Category category = (Category)Enum.Parse(typeof(Category), cat);
-            SubCategory subCategory = (SubCategory)Enum.Parse(typeof(SubCategory), subCat);
+            List<Category> category = new List<Category>();
+            string[] categories = cat.Split(',');
+            foreach(string c in categories)
+            {
+                category.Add((Category)Enum.Parse(typeof(Category), c));
+            }
             Difficulty difficulty = (Difficulty)Enum.Parse(typeof(Difficulty), diff);
 
             //Check if question already exists
@@ -41,7 +46,7 @@ namespace Arielle.Modules
             //if not create new Question object
             if (!questionExists)
             {
-                Program.Questions.Add(new Question(text, answer, category, subCategory, difficulty));
+                Program.Questions.Add(new Question(text, answer, category, difficulty));
                 await Context.Channel.SendMessageAsync($"Question \"{text}\" with correct answer \"{answer}\" has been successfully added");
 
                 //Save game questions to JSON file
@@ -210,7 +215,7 @@ namespace Arielle.Modules
             await channel.SendMessageAsync("List of all questions:");
             foreach (var q in Program.Questions)
             {
-                await channel.SendMessageAsync($"{Program.Questions.IndexOf(q)}: Question \"{q.Text}\" with Answer \"{q.Answer}\" of Category \"{q.Cat}\" and Subcategory \"{q.SubCat}\" of Difficulty \"{q.Diff}\"");
+                await channel.SendMessageAsync($"{Program.Questions.IndexOf(q)}: Question \"{q.Text}\" with Answer \"{q.Answer}\" of Categories \"{string.Join(", ", q.Cat.ToArray())}\" and Difficulty \"{q.Diff}\"");
             }
         }
         [Command("DeleteQuestion")]

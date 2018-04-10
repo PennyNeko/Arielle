@@ -17,9 +17,14 @@ namespace Arielle.SaveLoad
             string questionsFile = File.ReadAllText(@"..\..\JSON\Questions.json");
             foreach (var question in JsonConvert.DeserializeObject<dynamic>(questionsFile))
             {
+                List<Category> category = new List<Category>();
+                ;
+                foreach (string c in question.Cat)
+                {
+                    category.Add((Category)Enum.Parse(typeof(Category), c));
+                }
                 Question newQuestion = new Question((string)question.Text, (string)question.Answer, 
-                    (Category) Enum.Parse(typeof(Category), (string)question.Cat), (SubCategory)Enum.Parse(typeof(SubCategory),
-                    (string)question.SubCat), (Difficulty)Enum.Parse(typeof(Difficulty), (string)question.Diff));
+                   category, (Difficulty)Enum.Parse(typeof(Difficulty), (string)question.Diff));
                 questions.Add(newQuestion);
             }
         }
