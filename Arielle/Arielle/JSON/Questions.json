@@ -1,1 +1,1 @@
-[{"Text":"How many smash attacks do you need for one [Cold-Hearted] stack?","Answer":"2","Cat":["Classes"],"Diff":"Easy"},{"Text":"How much SP do you need to activate the skill [Frostbite]","Answer":"625","Cat":["Classes","Vella"],"Diff":"Medium"}]
+[{"Text":"How many smash attacks do you need for one [Cold-Hearted] stack?","Answer":["2","Two"],"Cat":["Classes","Vella"],"Diff":"Easy"}]

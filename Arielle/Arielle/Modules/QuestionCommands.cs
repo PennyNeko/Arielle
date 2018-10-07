@@ -4,10 +4,8 @@ using Discord.Commands;
 using Discord.WebSocket;
 using System;
 using System.Threading.Tasks;
-using static Arielle.Question;
 using System.Timers;
 using System.Linq;
-using System.Collections.Generic;
 
 namespace Arielle.Modules
 {
@@ -22,37 +20,23 @@ namespace Arielle.Modules
         private static bool isQuizRunning = false;
 
         [Command("AddQuestion")]
-        public async Task AddNewQuestion(string text, string answer, string cat,  string diff)
+        public async Task AddNewQuestion(string text, string answer, string category,  string difficulty)
         {
-            bool questionExists = false;
-            List<Category> category = new List<Category>();
-            string[] categories = cat.Split(',');
-            foreach(string c in categories)
-            {
-                category.Add((Category)Enum.Parse(typeof(Category), c));
-            }
-            Difficulty difficulty = (Difficulty)Enum.Parse(typeof(Difficulty), diff);
-
             //Check if question already exists
             foreach (Question q in Program.Questions)
             {
                 if (q.Text == text)
                 {
                     await Context.Channel.SendMessageAsync($"Question \"{text}\" already exists!");
-                    questionExists = true;
-                    break;
+                    return; 
                 }
             }
-            //if not create new Question object
-            if (!questionExists)
-            {
-                Program.Questions.Add(new Question(text, answer, category, difficulty));
-                await Context.Channel.SendMessageAsync($"Question \"{text}\" with correct answer \"{answer}\" has been successfully added");
+            Program.Questions.Add(new Question(text, answer, category, difficulty));
+            await Context.Channel.SendMessageAsync($"Question \"{text}\" with correct answer \"{answer}\" has been successfully added");
 
-                //Save game questions to JSON file
-                SaveQuestions savedQuestions = new SaveQuestions(Program.Questions);
-            }
-
+            //Save game questions to JSON file
+            SaveQuestions savedQuestions = new SaveQuestions(Program.Questions);
+            return;
         }
 
 
@@ -81,8 +65,10 @@ namespace Arielle.Modules
 
         private void StartQuestionTimer()
         {
-            askedQuestionTimer = new Timer(30 * 1000);
-            askedQuestionTimer.AutoReset = false;
+            askedQuestionTimer = new Timer(30 * 1000)
+            {
+                AutoReset = false
+            };
             askedQuestionTimer.Elapsed += async (source, e) => await StopCurrentQuestion();
             askedQuestionTimer.Start();
         }
@@ -161,11 +147,11 @@ namespace Arielle.Modules
                         return;
                     var msg = imsg as SocketUserMessage;
 
-                    if (msg.Content.ToLower() != randomQuestion.Answer.ToLower())
+                    if (!randomQuestion.Answer.Contains(msg.Content.ToLower()))
                         return;
 
                     User correctUser = null;
-                    quizAnswer.WithTitle($"Correct answer \"{randomQuestion.Answer}\" by {msg.Author.Username}");
+                    quizAnswer.WithTitle($"Correct answer \"{msg.Content}\" by {msg.Author.Username}");
                     quizAnswer.WithColor(Color.Green);
                     //await Context.Channel.SendMessageAsync($"Correct answer \"{randomQuestion.Answer}\" by {msg.Author.Mention}");
 
@@ -185,7 +171,7 @@ namespace Arielle.Modules
                         correctUser = Program.Users.Last();
                     }
 
-                    AddPoint(correctUser);
+                    AddPoint(correctUser,1);
                     await StopCurrentQuestion();
                     await Context.Channel.SendMessageAsync("", false, quizAnswer);
                 }
@@ -196,11 +182,11 @@ namespace Arielle.Modules
             return Task.CompletedTask;
         }
 
-        private void AddPoint(User user)
+        private void AddPoint(User user, int points)
         {
-            quizAnswer.WithDescription($"Current points: {user.Points}+1");
+            quizAnswer.WithDescription($"Current points: {user.Points}+{points}");
             //await Context.Channel.SendMessageAsync($"Current points: {user.Points}+1");
-            user.Points++;
+            user.Points += points;
             SaveUsers savedUsers = new SaveUsers(Program.Users);
         }
 
@@ -215,7 +201,11 @@ namespace Arielle.Modules
             await channel.SendMessageAsync("List of all questions:");
             foreach (var q in Program.Questions)
             {
-                await channel.SendMessageAsync($"{Program.Questions.IndexOf(q)}: Question \"{q.Text}\" with Answer \"{q.Answer}\" of Categories \"{string.Join(", ", q.Cat.ToArray())}\" and Difficulty \"{q.Diff}\"");
+                EmbedBuilder quizQuestion = new EmbedBuilder();
+                quizQuestion.WithTitle($"{Program.Questions.IndexOf(q)}: {q.Text}");
+                quizQuestion.WithDescription($"{string.Join(", ", q.Answer.ToArray())}\n {string.Join(", ", q.Cat.ToArray())}, {q.Diff}");
+                //await channel.SendMessageAsync($"{Program.Questions.IndexOf(q)}: Question \"{q.Text}\" with Answer \"{string.Join(", ", q.Answer.ToArray())}\" of Categories \"{string.Join(", ", q.Cat.ToArray())}\" and Difficulty \"{q.Diff}\"");
+                await channel.SendMessageAsync("", false, quizQuestion);
             }
         }
         [Command("DeleteQuestion")]
